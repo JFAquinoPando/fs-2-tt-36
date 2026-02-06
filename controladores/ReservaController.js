@@ -10,6 +10,8 @@ const ReservaEsquema = z.object(
     }
 )
 
+const IdentificadorEsquema = z.number()
+
 let reservas = [
     {
         id: 1,
@@ -73,22 +75,22 @@ export function reservar(peticion, respuesta) {
             }
         )
     } catch (error) {
-            const detalles = JSON.parse(error.message)
+        const detalles = JSON.parse(error.message)
 
-            const detallesUsar = detalles.map(err => ({
-                campo: err.path.join('.'),
-                mensaje: err.message
-            }))
+        const detallesUsar = detalles.map(err => ({
+            campo: err.path.join('.'),
+            mensaje: err.message
+        }))
 
 
-            respuesta.status(400).json(
-                {
-                    "mensaje": "Petición incompleta",
-                    "datos": {
-                        error: detallesUsar
-                    }
+        respuesta.status(400).json(
+            {
+                "mensaje": "Petición incompleta",
+                "datos": {
+                    error: detallesUsar
                 }
-            )
+            }
+        )
     }
 
 
@@ -96,48 +98,99 @@ export function reservar(peticion, respuesta) {
 
 export const detalleReserva = (peticion, respuesta) => {
     const { id } = peticion.params
+    IdentificadorEsquema.parse(parseInt(id))
+
+
     respuesta.send(
         ...reservas.filter((reserva) => id == reserva.id)
     )
 }
 export const quitarReserva = (peticion, respuesta) => {
     const { id } = peticion.params
-    const posicion = reservas.findIndex((reserva) => id == reserva.id)
-    reservas.splice(posicion, 1)
-    respuesta.send(
-        {
-            mensaje: `Reserva #${id} eliminada`
-        }
-    )
+
+    try {
+
+        const posicion = reservas.findIndex((reserva) => id == reserva.id)
+        IdentificadorEsquema.parse(parseInt(id))
+        reservas.splice(posicion, 1)
+        respuesta.send(
+            {
+                mensaje: `Reserva #${id} eliminada`
+            }
+        )
+
+    } catch (error) {
+        const detalles = JSON.parse(error.message)
+
+        const detallesUsar = detalles.map(err => ({
+            campo: err.path.join('.'),
+            mensaje: err.message
+        }))
+
+
+        respuesta.status(400).json(
+            {
+                "mensaje": "Petición mal formada",
+                "datos": {
+                    error: detallesUsar
+                }
+            }
+        )
+    }
+
+
+
 }
 
 export const actualizarReserva = (peticion, respuesta) => {
     const { id } = peticion.params
-    const posicion = reservas.findIndex((reserva) => id == reserva.id)
+
+    try {
+        IdentificadorEsquema.parse(parseInt(id))
+
+        const posicion = reservas.findIndex((reserva) => id == reserva.id)
 
 
-    const {
-        lugar,
-        solicitante,
-        fecha_ini,
-        fecha_fin,
-        hora_ini,
-        hora_fin
-    } = peticion.body
+        const {
+            lugar,
+            solicitante,
+            fecha_ini,
+            fecha_fin,
+            hora_ini,
+            hora_fin
+        } = peticion.body
 
 
-    reservas.splice(posicion, 1, {
-        id,
-        lugar,
-        nombre: solicitante,
-        fechaFin: fecha_fin,
-        fechaInicio: fecha_ini,
-        horaFin: hora_fin,
-        horaInicio: hora_ini
-    })
-    respuesta.send(
-        {
-            mensaje: `Reserva #${id} modificada`
-        }
-    )
+        reservas.splice(posicion, 1, {
+            id,
+            lugar,
+            nombre: solicitante,
+            fechaFin: fecha_fin,
+            fechaInicio: fecha_ini,
+            horaFin: hora_fin,
+            horaInicio: hora_ini
+        })
+        respuesta.send(
+            {
+                mensaje: `Reserva #${id} modificada`
+            }
+        )
+    } catch (error) {
+        const detalles = JSON.parse(error.message)
+
+        const detallesUsar = detalles.map(err => ({
+            campo: err.path.join('.'),
+            mensaje: err.message
+        }))
+
+
+        respuesta.status(400).json(
+            {
+                "mensaje": "Petición mal formada",
+                "datos": {
+                    error: detallesUsar
+                }
+            }
+        )
+    }
 }
